@@ -4,18 +4,15 @@
 #include <string>
 #include <vector>
 
-#include "token_type.h"
 #include "token.h"
+#include "token_type.h"
 
 using namespace std;
 
 bool GLOBAL_HAD_ERROR = false;
 
-void report_error(int line, string where, string message) {
-  cout << "[line " << line << "] Error" + where << ": " + message << endl;
-}
-
-char* read_file_into_byte_array(const char* path, int* length) { ifstream fl(path);
+char* read_file_into_byte_array(const char* path, int* length) {
+  ifstream fl(path);
   fl.seekg(0, ios::end);
   size_t len = fl.tellg();
   char* ret = new char[len];
@@ -38,7 +35,7 @@ vector<string> tokenize_string(string target) {
 
 void run(string source_code) {
   vector<string> tokenized = tokenize_string(source_code);
-  for(auto it = tokenized.begin(); it != tokenized.end(); it++) {
+  for (auto it = tokenized.begin(); it != tokenized.end(); it++) {
     cout << *it << endl;
   }
 }
