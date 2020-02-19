@@ -16,15 +16,18 @@ class Scanner {
 
  public:
   Scanner(std::string _source) : source(_source) {}
-  std::vector<Token> scanAllTokens();
-  void scanNextToken();
-  bool atEnd();
+  std::vector<Token> scan_all_tokens();
+  void scan_next_token();
+  bool end_of_source();
   char advance();
-  void addToken(TokenType type);
-  void addToken(TokenType type, std::any literal);
-  bool advanceIfNextEquals(char c);
+  void add_token(TokenType type);
+  void add_token(TokenType type, std::any literal);
+  bool advance_ifequals(char c);
   char peek();
-  void parseStringToken();
+  char peek_next();
+  void parse_string_token();
+  void parse_number_token();
+  void parse_identifier();
   ~Scanner();
 };
 #endif

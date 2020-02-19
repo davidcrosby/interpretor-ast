@@ -24,10 +24,7 @@ class Token {
   std::string getLexeme() { return lexeme; }
   std::any getLiteral() { return literal; }
   unsigned long getLineNumber() { return line; }
-  friend std::ostream& operator<<(std::ostream& os, Token& tok) {
-    return os << "Lexeme: " << tok.getLexeme()
-              << " Type: " << TokenTypeStrings[tok.getType()] << "\n";
-  }
+  friend std::ostream& operator<<(std::ostream& os, Token& tok);
 };
 
 #endif

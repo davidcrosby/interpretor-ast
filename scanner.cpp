@@ -1,9 +1,18 @@
 #include "scanner.h"
 #include <iostream>
+#include <unordered_map>
 #include <vector>
+#include <exception>
 #include "error_handler.h"
 #include "token.h"
 #include "token_type.h"
+
+std::unordered_map<std::string, TokenType> keyword_token_type_mapping = {
+    {"and", AND},     {"and", AND},   {"class", CLASS}, {"else", ELSE},
+    {"false", FALSE}, {"for", FOR},   {"fun", FUN},     {"if", IF},
+    {"nil", NIL},     {"or", OR},     {"print", PRINT}, {"return", RETURN},
+    {"super", SUPER}, {"this", THIS}, {"true", TRUE},   {"var", VAR},
+    {"while", WHILE}};
 
 Scanner::~Scanner() {
   // tokens.erase(0, source.size());
@@ -13,17 +22,17 @@ char Scanner::advance() {
   return source[current++];
 }
 
-void Scanner::addToken(TokenType type) {
-  addToken(type, NULL);
+void Scanner::add_token(TokenType type) {
+  add_token(type, NULL);
 }
 
-void Scanner::addToken(TokenType type, std::any literal) {
+void Scanner::add_token(TokenType type, std::any literal) {
   std::string text = source.substr(start, current - start);
   tokens.push_back(*(new Token(type, text, literal, line)));
 }
 
-bool Scanner::advanceIfNextEquals(char c) {
-  if (atEnd())
+bool Scanner::advance_ifequals(char c) {
+  if (end_of_source())
     return false;
   if (peek() != c)
     return false;
@@ -32,30 +41,73 @@ bool Scanner::advanceIfNextEquals(char c) {
 }
 
 char Scanner::peek() {
-  if (atEnd())
+  if (end_of_source())
     return '\0';
   return source[current];
 }
 
-void Scanner::parseStringToken() {
-  while (peek() != '"' && !atEnd()) {
+char Scanner::peek_next() {
+  if (current + 1 >= source.size())
+    return '\0';
+  return source[current + 1];
+}
+
+bool is_alpha(char byte) {
+  return (byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z') ||
+         byte == '_';
+}
+
+bool is_digit(char byte) {  // UTIL
+  return '0' <= byte && byte <= '9';
+}
+
+bool is_alpha_numeric(char byte) {
+  return is_alpha(byte) || is_digit(byte);
+}
+
+void Scanner::parse_string_token() {
+  while (!end_of_source() && peek() != '"') {
     if (peek() == '\n')
       line++;
     advance();
   }
 
-  if (atEnd()) {
+  if (end_of_source()) {
     report_error(line, "Scanner", "Unterminated string");
   }
 
-  advance();  // Closing "
-  std::string returnValue = source.substr(start, current - start);
-  addToken(STRING, returnValue);
+  advance();  // Closing quote
+  std::string returnValue = source.substr(start + 1, current - start - 2);
+  add_token(STRING, returnValue);
 }
 
-void Scanner::scanNextToken() {
-  char c = advance();
-  switch (c) {
+void Scanner::parse_number_token() {
+  while (!end_of_source() && is_digit(peek())) {
+    advance();
+  }
+
+  if (peek() == '.' && is_digit(peek_next())) {
+    advance();
+    while (!end_of_source() && is_digit(peek())) {
+      advance();
+    }
+  }
+  add_token(NUMBER, std::stod(source.substr(start, current - start + 1)));
+}
+
+void Scanner::parse_identifier() {
+  while (is_alpha_numeric(peek())) advance();
+  std::string identifier = source.substr(start, current - start);
+  auto type = keyword_token_type_mapping.find(identifier);
+  if(type == keyword_token_type_mapping.end())
+    report_error(line, "", "Cannot recognize idenitifer.");
+  else
+    add_token(type->second);
+}
+
+void Scanner::scan_next_token() {
+  char byte = advance();
+  switch (byte) {
     case ' ':
       break;
     case '\r':
@@ -68,72 +120,82 @@ void Scanner::scanNextToken() {
 
     // LOGICAL OPS
     case '!':
-      addToken(advanceIfNextEquals('=') ? BANG_EQUAL : BANG);
+      add_token(advance_ifequals('=') ? BANG_EQUAL : BANG);
       break;
     case '=':
-      addToken(advanceIfNextEquals('=') ? EQUAL_EQUAL : EQUAL);
+      add_token(advance_ifequals('=') ? EQUAL_EQUAL : EQUAL);
       break;
     case '<':
-      addToken(advanceIfNextEquals('=') ? LESS_EQUAL : LESS);
+      add_token(advance_ifequals('=') ? LESS_EQUAL : LESS);
       break;
     case '>':
-      addToken(advanceIfNextEquals('=') ? GREATER_EQUAL : GREATER);
+      add_token(advance_ifequals('=') ? GREATER_EQUAL : GREATER);
       break;
 
     // NORMAL SINGLE CHAR OPS
     case '(':
-      addToken(LEFT_PAREN);
+      add_token(LEFT_PAREN);
       break;
     case ')':
-      addToken(RIGHT_PAREN);
+      add_token(RIGHT_PAREN);
       break;
     case '{':
-      addToken(LEFT_BRACE);
+      add_token(LEFT_BRACE);
       break;
     case '}':
-      addToken(RIGHT_BRACE);
+      add_token(RIGHT_BRACE);
       break;
     case ',':
-      addToken(COMMA);
+      add_token(COMMA);
       break;
     case '.':
-      addToken(DOT);
+      add_token(DOT);
       break;
     case '-':
-      addToken(MINUS);
+      add_token(MINUS);
       break;
     case '+':
-      addToken(PLUS);
+      add_token(PLUS);
       break;
     case ';':
-      addToken(SEMICOLON);
+      add_token(SEMICOLON);
       break;
     case '*':
-      addToken(STAR);
+      add_token(STAR);
       break;
     case '/':
-      addToken(SLASH);
+      add_token(SLASH);
+      break;
+    case '"':
+      parse_string_token();
       break;
     case '#':  // comment
-      while (peek() != '\n' && !atEnd())
+      while (peek() != '\n' && !end_of_source())
         advance();
       line++;
       break;
     default:
+      if (is_digit(byte)) {
+        parse_number_token();
+        break;
+      } else if (is_alpha_numeric(byte)) {
+        parse_identifier();
+        break;
+      }
       report_error(line, "Scanner", "Unexpected character.");
       break;
   }
   return;
 }
 
-bool Scanner::atEnd() {
+bool Scanner::end_of_source() {
   return current > source.size();
 }
 
-std::vector<Token> Scanner::scanAllTokens() {
-  while (!atEnd()) {
+std::vector<Token> Scanner::scan_all_tokens() {
+  while (!end_of_source()) {
     start = current;
-    scanNextToken();
+    scan_next_token();
   }
   tokens.push_back(*(new Token(END_OF_FILE, "", NULL, line)));
   return tokens;

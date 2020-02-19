@@ -6,6 +6,7 @@
 
 #include "token.h"
 #include "token_type.h"
+#include "scanner.h"
 
 using namespace std;
 
@@ -34,9 +35,10 @@ vector<string> tokenize_string(string target) {
 }
 
 void run(string source_code) {
-  vector<string> tokenized = tokenize_string(source_code);
-  for (auto it = tokenized.begin(); it != tokenized.end(); it++) {
-    cout << *it << endl;
+  Scanner* scanner = new Scanner(source_code);
+  vector<Token> tokens = scanner->scan_all_tokens();
+  for (auto it = tokens.begin(); it != tokens.end(); it++) {
+    cout << *it;
   }
 }
 
