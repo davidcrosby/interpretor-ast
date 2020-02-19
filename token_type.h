@@ -46,6 +46,7 @@ enum TokenType {
   TRUE,
   VAR,
   WHILE,
+  END_OF_FILE
 };
 
 #endif
