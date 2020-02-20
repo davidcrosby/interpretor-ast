@@ -3,7 +3,7 @@ GPPOPTS     = ${GPPWARN}
 CC  				= g++ -std=c++17 -g -O0 ${GPPOPTS}
 EXEC_TARGET = main
 ENTRY_OBJECT= $(EXEC_TARGET).o
-OBJ_FILES   = token.o scanner.o error_handler.o
+OBJ_FILES   = token.o scanner.o error_handler.o parser.o
 
 TEST_DIR	  = test
 TEST_EXEC_TARGET = test
