@@ -3,195 +3,236 @@
 #include "token.h"
 #include <vector>
 #include <any>
-class Assign;
-class Binary;
-class Call;
-class Get;
-class Grouping;
-class Literal;
-class Logical;
-class Set;
-class Super;
-class This;
-class Unary;
-class Variable;
+
+
+
+template<class R> class Assign;
+
+template<class R> class Binary;
+
+template<class R> class Call;
+
+template<class R> class Get;
+
+template<class R> class Grouping;
+
+template<class R> class Literal;
+
+template<class R> class Logical;
+
+template<class R> class Set;
+
+template<class R> class Super;
+
+template<class R> class This;
+
+template<class R> class Unary;
+
+template<class R> class Variable;
+template<class R>
 class AbstractExprDispatcher {
   public:
-    virtual void Dispatch(Assign Expr) = 0;
-    virtual void Dispatch(Binary Expr) = 0;
-    virtual void Dispatch(Call Expr) = 0;
-    virtual void Dispatch(Get Expr) = 0;
-    virtual void Dispatch(Grouping Expr) = 0;
-    virtual void Dispatch(Literal Expr) = 0;
-    virtual void Dispatch(Logical Expr) = 0;
-    virtual void Dispatch(Set Expr) = 0;
-    virtual void Dispatch(Super Expr) = 0;
-    virtual void Dispatch(This Expr) = 0;
-    virtual void Dispatch(Unary Expr) = 0;
-    virtual void Dispatch(Variable Expr) = 0;
+    virtual R visitAssignExpr(Assign<R>& expr) = 0;
+    virtual R visitBinaryExpr(Binary<R>& expr) = 0;
+    virtual R visitCallExpr(Call<R>& expr) = 0;
+    virtual R visitGetExpr(Get<R>& expr) = 0;
+    virtual R visitGroupingExpr(Grouping<R>& expr) = 0;
+    virtual R visitLiteralExpr(Literal<R>& expr) = 0;
+    virtual R visitLogicalExpr(Logical<R>& expr) = 0;
+    virtual R visitSetExpr(Set<R>& expr) = 0;
+    virtual R visitSuperExpr(Super<R>& expr) = 0;
+    virtual R visitThisExpr(This<R>& expr) = 0;
+    virtual R visitUnaryExpr(Unary<R>& expr) = 0;
+    virtual R visitVariableExpr(Variable<R>& expr) = 0;
 };
+
+template<class R>
 class Expr {
   public:
-    virtual void Accept(AbstractExprDispatcher dispatcher) = 0;
-    virtual ~Expr() = 0;
+    virtual R Accept(AbstractExprDispatcher<R>* dispatcher) = 0;
+    ~Expr() {};
 };
 
 
 
 
-class Assign: public Expr {
+template<class R>
+class Assign: public Expr<R> {
   private:
     Token name;
-    Expr* value;
+    Expr<R>* value;
   public:
-    Assign( Token _name, Expr* _value ): name(_name), value(_value) {}
-    Token getName() { return Name; }
-    Expr* getValue() { return Value; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Assign();
+    Assign( Token _name, Expr<R>* _value ): name(_name), value(_value) {}
+    Token getName() { return name; }
+    Expr<R>* getValue() { return value; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitAssignExpr(*this);
     }
 };
 
-class Binary: public Expr {
+template<class R>
+class Binary: public Expr<R> {
   private:
-    Expr* left;
+    Expr<R>* left;
     Token op;
-    Expr* right;
+    Expr<R>* right;
   public:
-    Binary( Expr* _left, Token _op, Expr* _right ): left(_left), op(_op), right(_right) {}
-    Expr* getLeft() { return Left; }
-    Token getOp() { return Op; }
-    Expr* getRight() { return Right; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Binary();
+    Binary( Expr<R>* _left, Token _op, Expr<R>* _right ): left(_left), op(_op), right(_right) {}
+    Expr<R>* getLeft() { return left; }
+    Token getOp() { return op; }
+    Expr<R>* getRight() { return right; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitBinaryExpr(*this);
     }
 };
 
-class Call: public Expr {
+template<class R>
+class Call: public Expr<R> {
   private:
-    Expr* callee;
+    Expr<R>* callee;
     Token paren;
-    std::vector<Expr*> arguments;
+    std::vector<Expr<R>*> arguments;
   public:
-    Call( Expr* _callee, Token _paren, std::vector<Expr*> _arguments ): callee(_callee), paren(_paren), arguments(_arguments) {}
-    Expr* getCallee() { return Callee; }
-    Token getParen() { return Paren; }
-    std::vector<Expr*> getArguments() { return Arguments; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Call();
+    Call( Expr<R>* _callee, Token _paren, std::vector<Expr<R>*> _arguments ): callee(_callee), paren(_paren), arguments(_arguments) {}
+    Expr<R>* getCallee() { return callee; }
+    Token getParen() { return paren; }
+    std::vector<Expr<R>*> getArguments() { return arguments; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitCallExpr(*this);
     }
 };
 
-class Get: public Expr {
+template<class R>
+class Get: public Expr<R> {
   private:
-    Expr* object;
+    Expr<R>* object;
     Token name;
   public:
-    Get( Expr* _object, Token _name ): object(_object), name(_name) {}
-    Expr* getObject() { return Object; }
-    Token getName() { return Name; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Get();
+    Get( Expr<R>* _object, Token _name ): object(_object), name(_name) {}
+    Expr<R>* getObject() { return object; }
+    Token getName() { return name; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitGetExpr(*this);
     }
 };
 
-class Grouping: public Expr {
+template<class R>
+class Grouping: public Expr<R> {
   private:
-    Expr* expression;
+    Expr<R>* expression;
   public:
-    Grouping( Expr* _expression ): expression(_expression) {}
-    Expr* getExpression() { return Expression; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Grouping();
+    Grouping( Expr<R>* _expression ): expression(_expression) {}
+    Expr<R>* getExpression() { return expression; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitGroupingExpr(*this);
     }
 };
 
-class Literal: public Expr {
+template<class R>
+class Literal: public Expr<R> {
   private:
     std::any value;
   public:
+    ~Literal();
     Literal( std::any _value ): value(_value) {}
-    std::any getValue() { return Value; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    std::any getValue() { return value; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitLiteralExpr(*this);
     }
 };
 
-class Logical: public Expr {
+template<class R>
+class Logical: public Expr<R> {
   private:
-    Expr* left;
+    Expr<R>* left;
     Token op;
-    Expr* right;
+    Expr<R>* right;
   public:
-    Logical( Expr* _left, Token _op, Expr* _right ): left(_left), op(_op), right(_right) {}
-    Expr* getLeft() { return Left; }
-    Token getOp() { return Op; }
-    Expr* getRight() { return Right; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Logical();
+    Logical( Expr<R>* _left, Token _op, Expr<R>* _right ): left(_left), op(_op), right(_right) {}
+    Expr<R>* getLeft() { return left; }
+    Token getOp() { return op; }
+    Expr<R>* getRight() { return right; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitLogicalExpr(*this);
     }
 };
 
-class Set: public Expr {
+template<class R>
+class Set: public Expr<R> {
   private:
-    Expr* object;
+    Expr<R>* object;
     Token name;
-    Expr* value;
+    Expr<R>* value;
   public:
-    Set( Expr* _object, Token _name, Expr* _value ): object(_object), name(_name), value(_value) {}
-    Expr* getObject() { return Object; }
-    Token getName() { return Name; }
-    Expr* getValue() { return Value; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Set();
+    Set( Expr<R>* _object, Token _name, Expr<R>* _value ): object(_object), name(_name), value(_value) {}
+    Expr<R>* getObject() { return object; }
+    Token getName() { return name; }
+    Expr<R>* getValue() { return value; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitSetExpr(*this);
     }
 };
 
-class Super: public Expr {
+template<class R>
+class Super: public Expr<R> {
   private:
     Token keyword;
     Token method;
   public:
+    ~Super();
     Super( Token _keyword, Token _method ): keyword(_keyword), method(_method) {}
-    Token getKeyword() { return Keyword; }
-    Token getMethod() { return Method; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    Token getKeyword() { return keyword; }
+    Token getMethod() { return method; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitSuperExpr(*this);
     }
 };
 
-class This: public Expr {
+template<class R>
+class This: public Expr<R> {
   private:
     Token keyword;
   public:
+    ~This();
     This( Token _keyword ): keyword(_keyword) {}
-    Token getKeyword() { return Keyword; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    Token getKeyword() { return keyword; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitThisExpr(*this);
     }
 };
 
-class Unary: public Expr {
+template<class R>
+class Unary: public Expr<R> {
   private:
     Token op;
-    Expr* right;
+    Expr<R>* right;
   public:
-    Unary( Token _op, Expr* _right ): op(_op), right(_right) {}
-    Token getOp() { return Op; }
-    Expr* getRight() { return Right; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Unary();
+    Unary( Token _op, Expr<R>* _right ): op(_op), right(_right) {}
+    Token getOp() { return op; }
+    Expr<R>* getRight() { return right; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitUnaryExpr(*this);
     }
 };
 
-class Variable: public Expr {
+template<class R>
+class Variable: public Expr<R> {
   private:
     Token name;
   public:
+    ~Variable();
     Variable( Token _name ): name(_name) {}
-    Token getName() { return Name; }
-    void Accept(AbstractExprDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    Token getName() { return name; }
+    R Accept(AbstractExprDispatcher<R>* dispatcher) override {
+      return dispatcher->visitVariableExpr(*this);
     }
 };
 

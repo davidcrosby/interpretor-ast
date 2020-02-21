@@ -1,31 +1,31 @@
 import os
 
 Expr_definitions = {
-        "Assign"     : "Token name, Expr* value",
-        "Binary"     : "Expr* left, Token op, Expr* right",
-        "Call"       : "Expr* callee, Token paren, std::vector<Expr*> arguments",
-        "Get"        : "Expr* object, Token name",
-        "Grouping"   : "Expr* expression",
+        "Assign"     : "Token name, Expr<R>* value",
+        "Binary"     : "Expr<R>* left, Token op, Expr<R>* right",
+        "Call"       : "Expr<R>* callee, Token paren, std::vector<Expr<R>*> arguments",
+        "Get"        : "Expr<R>* object, Token name",
+        "Grouping"   : "Expr<R>* expression",
         "Literal"    : "std::any value",
-        "Logical"    : "Expr* left, Token op, Expr* right",
-        "Set"        : "Expr* object, Token name, Expr* value",
+        "Logical"    : "Expr<R>* left, Token op, Expr<R>* right",
+        "Set"        : "Expr<R>* object, Token name, Expr<R>* value",
         "Super"      : "Token keyword, Token method",
         "This"       : "Token keyword",
-        "Unary"      : "Token op, Expr* right",
+        "Unary"      : "Token op, Expr<R>* right",
         "Variable"   : "Token name"
         }
 
 Stmt_definitions = {
-        "Block"      : "std::vector<Stmt*> statements",
-        "Class"      : "Token name, std::vector<Function> methods",
-        "Class"      : "Token name, Variable superclass, std::vector<Function> methods",
-        "Expression" : "Expr* expression",
-        "Function"   : "Token name, std::vector<Token> params, std::vector<Stmt*> body",
-        "If"         : "Expr* condition, Stmt* thenBranch, Stmt* elseBranch",
-        "Print"      : "Expr* expression",
-        "Return"     : "Token keyword, Expr* value",
-        "Var"        : "Token name, Expr* initializer",
-        "While"      : "Expr* condition, Stmt* body"
+        "Block"      : "std::vector<Stmt<R>*> statements",
+        "Class"      : "Token name, std::vector<Function<R>> methods",
+        "Class"      : "Token name, Variable<R> superclass, std::vector<Function<R>> methods",
+        "Expression" : "Expr<R>* expression",
+        "Function"   : "Token name, std::vector<Token> params, std::vector<Stmt<R>*> body",
+        "If"         : "Expr<R>* condition, Stmt<R>* thenBranch, Stmt<R>* elseBranch",
+        "Print"      : "Expr<R>* expression",
+        "Return"     : "Token keyword, Expr<R>* value",
+        "Var"        : "Token name, Expr<R>* initializer",
+        "While"      : "Expr<R>* condition, Stmt<R>* body"
         }
 
 
@@ -45,11 +45,13 @@ def define_sub_class(outfile, class_name, base_name):
     args = input_classes[base_name][class_name];
     args = [ arg for arg in args.split(',')]
     args = list(map(lambda l: list(filter(lambda x: x!="", l.split(" "))), args))
-    outfile.write("class %s: public %s {\n" % (class_name, base_name));
+    outfile.write("template<class R>\n")
+    outfile.write("class %s: public %s<R> {\n" % (class_name, base_name));
     outfile.write("  private:\n");
     for entry in args:
         outfile.write("    %s %s;\n" % tuple(entry))
     outfile.write("  public:\n");
+    outfile.write("    ~%s();\n" % class_name);
 
     constructor_arg_string, constructor_declaration_string = "", ""
     sp = ""
@@ -62,28 +64,32 @@ def define_sub_class(outfile, class_name, base_name):
         constructor_declaration_string))
     for arg in args: # getters
         typename, varname = arg
-        varname = varname[0].upper() + varname[1:]
-        outfile.write("    %s get%s() { return %s; }\n" % (typename, varname,
+        capped_varname = varname[0].upper() + varname[1:]
+        outfile.write("    %s get%s() { return %s; }\n" % (typename, capped_varname,
             varname))
-    outfile.write("    void Accept(Abstract%sDispatcher dispatcher) override {\n" % base_name);
-    outfile.write("      dispatcher.Dispatch(*this);\n");
+    outfile.write("    R Accept(Abstract%sDispatcher<R>* dispatcher) override {\n" % base_name);
+    outfile.write("      return dispatcher->visit%s%s(*this);\n" % (class_name,
+        base_name));
     outfile.write("    }\n");
     outfile.write("};\n\n");
 
 
 def define_abstract_dispatcher(outfile, base_name):
+    outfile.write("template<class R>\n")
     outfile.write("class Abstract%sDispatcher {\n" % base_name);
     outfile.write("  public:\n");
     for class_name in input_classes[base_name]:
-        outfile.write("    virtual void Dispatch(%s Expr) = 0;\n" % class_name);
+        outfile.write("    virtual R visit%s%s(%s<R>& expr) = 0;\n"
+                % (class_name, base_name, class_name));
     outfile.write("};\n");
 
 
 def define_abstract_base_class(outfile, base_name):
+    outfile.write("\ntemplate<class R>\n")
     outfile.write("class %s {\n" % base_name);
     outfile.write("  public:\n");
-    outfile.write("    virtual void Accept(Abstract%sDispatcher dispatcher) = 0;\n" % base_name)
-    outfile.write("    virtual ~%s() = 0;\n" % base_name)
+    outfile.write("    virtual R Accept(Abstract%sDispatcher<R>* dispatcher) = 0;\n" % base_name)
+    outfile.write("    ~%s() {};\n" % base_name)
     outfile.write("};\n\n\n");
     outfile.write("\n\n");
 
@@ -93,7 +99,9 @@ def write_headers(outfile, base_name):
             outfile.write('#include "%s"\n' % header)
         else:
             outfile.write("#include <%s>\n" % header)
+    outfile.write("\n\n");
     for lower_class in input_classes[base_name]:
+        outfile.write("\ntemplate<class R> ")
         outfile.write("class %s;\n" % lower_class);
 
 def generate_ast():

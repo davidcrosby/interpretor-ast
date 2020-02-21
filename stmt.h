@@ -3,150 +3,182 @@
 #include "token.h"
 #include "expr.h"
 #include <vector>
-class Block;
-class Class;
-class Expression;
-class Function;
-class If;
-class Print;
-class Return;
-class Var;
-class While;
+
+
+
+template<class R> class Block;
+
+template<class R> class Class;
+
+template<class R> class Expression;
+
+template<class R> class Function;
+
+template<class R> class If;
+
+template<class R> class Print;
+
+template<class R> class Return;
+
+template<class R> class Var;
+
+template<class R> class While;
+template<class R>
 class AbstractStmtDispatcher {
   public:
-    virtual void Dispatch(Block Expr) = 0;
-    virtual void Dispatch(Class Expr) = 0;
-    virtual void Dispatch(Expression Expr) = 0;
-    virtual void Dispatch(Function Expr) = 0;
-    virtual void Dispatch(If Expr) = 0;
-    virtual void Dispatch(Print Expr) = 0;
-    virtual void Dispatch(Return Expr) = 0;
-    virtual void Dispatch(Var Expr) = 0;
-    virtual void Dispatch(While Expr) = 0;
+    virtual R visitBlockStmt(Block<R>& expr) = 0;
+    virtual R visitClassStmt(Class<R>& expr) = 0;
+    virtual R visitExpressionStmt(Expression<R>& expr) = 0;
+    virtual R visitFunctionStmt(Function<R>& expr) = 0;
+    virtual R visitIfStmt(If<R>& expr) = 0;
+    virtual R visitPrintStmt(Print<R>& expr) = 0;
+    virtual R visitReturnStmt(Return<R>& expr) = 0;
+    virtual R visitVarStmt(Var<R>& expr) = 0;
+    virtual R visitWhileStmt(While<R>& expr) = 0;
 };
+
+template<class R>
 class Stmt {
   public:
-    virtual void Accept(AbstractStmtDispatcher dispatcher) = 0;
-    virtual ~Stmt() = 0;
+    virtual R Accept(AbstractStmtDispatcher<R>* dispatcher) = 0;
+    ~Stmt() {};
 };
 
 
 
 
-class Block: public Stmt {
+template<class R>
+class Block: public Stmt<R> {
   private:
-    std::vector<Stmt*> statements;
+    std::vector<Stmt<R>*> statements;
   public:
-    Block( std::vector<Stmt*> _statements ): statements(_statements) {}
-    std::vector<Stmt*> getStatements() { return Statements; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Block();
+    Block( std::vector<Stmt<R>*> _statements ): statements(_statements) {}
+    std::vector<Stmt<R>*> getStatements() { return statements; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitBlockStmt(*this);
     }
 };
 
-class Class: public Stmt {
+template<class R>
+class Class: public Stmt<R> {
   private:
     Token name;
-    Variable superclass;
-    std::vector<Function> methods;
+    Variable<R> superclass;
+    std::vector<Function<R>> methods;
   public:
-    Class( Token _name, Variable _superclass, std::vector<Function> _methods ): name(_name), superclass(_superclass), methods(_methods) {}
-    Token getName() { return Name; }
-    Variable getSuperclass() { return Superclass; }
-    std::vector<Function> getMethods() { return Methods; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Class();
+    Class( Token _name, Variable<R> _superclass, std::vector<Function<R>> _methods ): name(_name), superclass(_superclass), methods(_methods) {}
+    Token getName() { return name; }
+    Variable<R> getSuperclass() { return superclass; }
+    std::vector<Function<R>> getMethods() { return methods; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitClassStmt(*this);
     }
 };
 
-class Expression: public Stmt {
+template<class R>
+class Expression: public Stmt<R> {
   private:
-    Expr* expression;
+    Expr<R>* expression;
   public:
-    Expression( Expr* _expression ): expression(_expression) {}
-    Expr* getExpression() { return Expression; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Expression();
+    Expression( Expr<R>* _expression ): expression(_expression) {}
+    Expr<R>* getExpression() { return expression; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitExpressionStmt(*this);
     }
 };
 
-class Function: public Stmt {
+template<class R>
+class Function: public Stmt<R> {
   private:
     Token name;
     std::vector<Token> params;
-    std::vector<Stmt*> body;
+    std::vector<Stmt<R>*> body;
   public:
-    Function( Token _name, std::vector<Token> _params, std::vector<Stmt*> _body ): name(_name), params(_params), body(_body) {}
-    Token getName() { return Name; }
-    std::vector<Token> getParams() { return Params; }
-    std::vector<Stmt*> getBody() { return Body; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Function();
+    Function( Token _name, std::vector<Token> _params, std::vector<Stmt<R>*> _body ): name(_name), params(_params), body(_body) {}
+    Token getName() { return name; }
+    std::vector<Token> getParams() { return params; }
+    std::vector<Stmt<R>*> getBody() { return body; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitFunctionStmt(*this);
     }
 };
 
-class If: public Stmt {
+template<class R>
+class If: public Stmt<R> {
   private:
-    Expr* condition;
-    Stmt* thenBranch;
-    Stmt* elseBranch;
+    Expr<R>* condition;
+    Stmt<R>* thenBranch;
+    Stmt<R>* elseBranch;
   public:
-    If( Expr* _condition, Stmt* _thenBranch, Stmt* _elseBranch ): condition(_condition), thenBranch(_thenBranch), elseBranch(_elseBranch) {}
-    Expr* getCondition() { return Condition; }
-    Stmt* getThenBranch() { return ThenBranch; }
-    Stmt* getElseBranch() { return ElseBranch; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~If();
+    If( Expr<R>* _condition, Stmt<R>* _thenBranch, Stmt<R>* _elseBranch ): condition(_condition), thenBranch(_thenBranch), elseBranch(_elseBranch) {}
+    Expr<R>* getCondition() { return condition; }
+    Stmt<R>* getThenBranch() { return thenBranch; }
+    Stmt<R>* getElseBranch() { return elseBranch; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitIfStmt(*this);
     }
 };
 
-class Print: public Stmt {
+template<class R>
+class Print: public Stmt<R> {
   private:
-    Expr* expression;
+    Expr<R>* expression;
   public:
-    Print( Expr* _expression ): expression(_expression) {}
-    Expr* getExpression() { return Expression; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Print();
+    Print( Expr<R>* _expression ): expression(_expression) {}
+    Expr<R>* getExpression() { return expression; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitPrintStmt(*this);
     }
 };
 
-class Return: public Stmt {
+template<class R>
+class Return: public Stmt<R> {
   private:
     Token keyword;
-    Expr* value;
+    Expr<R>* value;
   public:
-    Return( Token _keyword, Expr* _value ): keyword(_keyword), value(_value) {}
-    Token getKeyword() { return Keyword; }
-    Expr* getValue() { return Value; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Return();
+    Return( Token _keyword, Expr<R>* _value ): keyword(_keyword), value(_value) {}
+    Token getKeyword() { return keyword; }
+    Expr<R>* getValue() { return value; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitReturnStmt(*this);
     }
 };
 
-class Var: public Stmt {
+template<class R>
+class Var: public Stmt<R> {
   private:
     Token name;
-    Expr* initializer;
+    Expr<R>* initializer;
   public:
-    Var( Token _name, Expr* _initializer ): name(_name), initializer(_initializer) {}
-    Token getName() { return Name; }
-    Expr* getInitializer() { return Initializer; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~Var();
+    Var( Token _name, Expr<R>* _initializer ): name(_name), initializer(_initializer) {}
+    Token getName() { return name; }
+    Expr<R>* getInitializer() { return initializer; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitVarStmt(*this);
     }
 };
 
-class While: public Stmt {
+template<class R>
+class While: public Stmt<R> {
   private:
-    Expr* condition;
-    Stmt* body;
+    Expr<R>* condition;
+    Stmt<R>* body;
   public:
-    While( Expr* _condition, Stmt* _body ): condition(_condition), body(_body) {}
-    Expr* getCondition() { return Condition; }
-    Stmt* getBody() { return Body; }
-    void Accept(AbstractStmtDispatcher dispatcher) override {
-      dispatcher.Dispatch(*this);
+    ~While();
+    While( Expr<R>* _condition, Stmt<R>* _body ): condition(_condition), body(_body) {}
+    Expr<R>* getCondition() { return condition; }
+    Stmt<R>* getBody() { return body; }
+    R Accept(AbstractStmtDispatcher<R>* dispatcher) override {
+      return dispatcher->visitWhileStmt(*this);
     }
 };
 

@@ -1,6 +1,7 @@
 GPPWARN     = -Wall -Wextra -Wpedantic -Wshadow -Wold-style-cast
 GPPOPTS     = ${GPPWARN}
-CC  				= g++ -std=c++17 -g -O0 ${GPPOPTS}
+CC  				= g++ -std=c++17  -g -O0 ${GPPOPTS}
+#-mmacosx-version-min=10.15
 EXEC_TARGET = main
 ENTRY_OBJECT= $(EXEC_TARGET).o
 OBJ_FILES   = token.o scanner.o error_handler.o parser.o
@@ -14,6 +15,9 @@ TEST_ALL_OBJECTS = $(OBJ_FILES) $(TEST_OBJ) $(TEST_ENTRY_OBJECT)
 
 all: $(EXEC_TARGET)
 
+printer: $(OBJ_FILES) ast_printer.o 
+	$(CC) -o $@ $^
+
 test: $(TEST_ALL_OBJECTS)
 	$(CC) -o $(TEST_DIR)/$@ $^
 
@@ -24,7 +28,7 @@ $(EXEC_TARGET): $(OBJ_FILES) $(ENTRY_OBJECT)
 	$(CC) -o $@ $^
 
 clean:
-	rm $(OBJ_FILES) $(TEST_OBJ)
+	rm $(OBJ_FILES) $(TEST_OBJ) ast_printer.o
 
 spotless: clean
-	rm $(EXEC_TARGET) $(TEST_ALL_OBJECTS)
+	rm $(EXEC_TARGET) $(TEST_ALL_OBJECTS) printer
