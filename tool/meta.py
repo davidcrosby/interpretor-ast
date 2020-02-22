@@ -6,7 +6,7 @@ Expr_definitions = {
         "Call"       : "Expr<R>* callee, Token paren, std::vector<Expr<R>*> arguments",
         "Get"        : "Expr<R>* object, Token name",
         "Grouping"   : "Expr<R>* expression",
-        "Literal"    : "std::any value",
+        "Literal"    : "void* value, std::string actualType",
         "Logical"    : "Expr<R>* left, Token op, Expr<R>* right",
         "Set"        : "Expr<R>* object, Token name, Expr<R>* value",
         "Super"      : "Token keyword, Token method",

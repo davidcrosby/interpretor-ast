@@ -136,11 +136,13 @@ class Grouping: public Expr<R> {
 template<class R>
 class Literal: public Expr<R> {
   private:
-    std::any value;
+    void* value;
+    std::string actualType;
   public:
     ~Literal();
-    Literal( std::any _value ): value(_value) {}
-    std::any getValue() { return value; }
+    Literal( void* _value, std::string _actualType ): value(_value), actualType(_actualType) {}
+    void* getValue() { return value; }
+    std::string getActualType() { return actualType; }
     R Accept(AbstractExprDispatcher<R>* dispatcher) override {
       return dispatcher->visitLiteralExpr(*this);
     }

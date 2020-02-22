@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include <iostream>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 #include <exception>
@@ -23,10 +24,16 @@ char Scanner::advance() {
 }
 
 void Scanner::add_token(TokenType type) {
-  add_token(type, NULL);
+  tokens.push_back( *(new Token(type, "", NULL, line) ));
 }
 
-void Scanner::add_token(TokenType type, std::any literal) {
+void Scanner::add_token(TokenType type, double number) {
+  std::stringstream ss;
+  ss << number;
+  tokens.push_back(* (new Token(type, ss.str(), &number, line)));
+}
+
+void Scanner::add_token(TokenType type, void* literal) {
   std::string text = source.substr(start, current - start);
   tokens.push_back(*(new Token(type, text, literal, line)));
 }
@@ -78,7 +85,7 @@ void Scanner::parse_string_token() {
 
   advance();  // Closing quote
   std::string returnValue = source.substr(start + 1, current - start - 2);
-  add_token(STRING, returnValue);
+  add_token(STRING, &returnValue);
 }
 
 void Scanner::parse_number_token() {
@@ -92,7 +99,8 @@ void Scanner::parse_number_token() {
       advance();
     }
   }
-  add_token(NUMBER, std::stod(source.substr(start, current - start + 1)));
+  double value = std::stod(source.substr(start, current - start + 1));
+  add_token(NUMBER, value);
 }
 
 void Scanner::parse_identifier() {

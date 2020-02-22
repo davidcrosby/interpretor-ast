@@ -10,13 +10,13 @@ class Token {
  private:
   TokenType type;
   std::string lexeme;
-  std::any literal;
+  void* literal;
   unsigned long line;
 
  public:
   Token(TokenType _type,
         std::string _lexeme,
-        std::any _literal,
+        void* _literal,
         unsigned long _line)
       : type(_type), lexeme(_lexeme), literal(_literal), line(_line) {}
   Token(TokenType _type) : type(_type) {}

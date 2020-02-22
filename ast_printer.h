@@ -40,9 +40,10 @@ class AstPrinter: AbstractExprDispatcher<std::string> {
     }
     std::string visitLiteralExpr(Literal<std::string>& expr) override {
       std::stringstream ss;
-      try{
-        ss << std::any_cast<std::string>(expr.getValue());
-      } catch (const std::bad_any_cast& e) {
+      std::string actualType = expr.getActualType();
+      if (actualType == "double" ) {
+        ss << *static_cast<double*>(expr.getValue());
+      } else {
         ss << "BAD";
       }
 

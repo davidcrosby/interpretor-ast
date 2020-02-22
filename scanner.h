@@ -21,7 +21,8 @@ class Scanner {
   bool end_of_source();
   char advance();
   void add_token(TokenType type);
-  void add_token(TokenType type, std::any literal);
+  void add_token(TokenType type, void* literal);
+  void add_token(TokenType type, double number);
   bool advance_ifequals(char c);
   char peek();
   char peek_next();
